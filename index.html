@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Control Carro de Paro CIMA</title>
+<meta name="description" content="Control diario de fajas, apertura, reposición y vencimientos del carro de paro y las cajas de emergencia de CIMA.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' fill='%23b3261e'>✚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1><span class="plus">✚</span> Carro de paro · CIMA</h1>
+      <div class="meta" id="hoyTxt"></div>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-v="hoy" aria-selected="true">Hoy</button>
+      <button role="tab" data-v="vto">Vencimientos<span class="badge" id="vtoBadge" hidden></span></button>
+      <button role="tab" data-v="hist">Historial</button>
+      <button role="tab" data-v="cont">Contenido</button>
+      <button role="tab" data-v="como">Cómo se usa</button>
+    </nav>
+  </header>
+  <main id="main"></main>
+</div>
+<div class="sheet" id="sheet" hidden><div class="inner" id="sheetInner"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
