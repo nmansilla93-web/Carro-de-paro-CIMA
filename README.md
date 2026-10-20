@@ -7,6 +7,7 @@ Aplicación web para llevar el control del **carro de paro** y las **3 cajas de 
 - **Vencimientos**: alerta de lo vencido o lo que vence en los próximos 60 días.
 - **Historial** filtrable por unidad, con exportación a CSV.
 - **Contenido**: listado de cantidades fijas de cada unidad (editable).
+- **Códigos QR**: etiquetas imprimibles para cada unidad. Al escanearlas se abre el control diario de esa unidad o, si ya se hizo, la confirmación con hora y responsable. Para confirmar hay que escribir el número de faja que se ve, y si no coincide con el registrado queda marcada como problema.
 - **Control mensual**: aviso cuando una unidad pasa más de 31 días sin abrirse.
 
 ## Estructura
@@ -16,6 +17,7 @@ index.html          Página principal
 css/styles.css      Estilos (tema claro y oscuro automático)
 js/app.js           Lógica de la app: inventario, estados, vistas y formularios
 js/storage.js       Almacenamiento local para usar fuera de claude.ai
+js/vendor/qrcode.js Generador de QR (qrcode-generator, licencia MIT)
 .github/workflows/  Publicación automática en GitHub Pages
 ```
 

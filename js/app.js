@@ -66,7 +66,7 @@ function render(){
   else if(!db) h+=`<div class="banner">No se pudo acceder al almacenamiento de este navegador. Revisá que no esté en modo privado ni con los datos de sitios bloqueados.</div>`;
   else if(localMode) h+=`<div class="banner info">Modo local: los controles se guardan solo en este navegador. Usá <b>Exportar respaldo</b> en Historial para no perderlos.</div>`;
   else if(!canWrite) h+=`<div class="banner">Tenés acceso de solo lectura. Pedile a la coordinación que te dé permiso de Colaborador para registrar controles.</div>`;
-  if(view==="hoy")h+=vHoy(); if(view==="vto")h+=vVto(); if(view==="hist")h+=vHist(); if(view==="cont")h+=vCont(); if(view==="como")h+=vComo();
+  if(view==="hoy")h+=vHoy(); if(view==="vto")h+=vVto(); if(view==="hist")h+=vHist(); if(view==="cont")h+=vCont(); if(view==="qr")h+=vQR(); if(view==="como")h+=vComo();
   m.innerHTML=h; bindMain();
 }
 function vHoy(){
@@ -108,7 +108,7 @@ function vVto(){
 function tablaReg(list){
   return `<div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Unidad</th><th>Tipo</th><th>Faja</th><th>Detalle</th><th>Responsable</th></tr></thead><tbody>${list.map(r=>{
     let det="";
-    if(r.tipo==="diario"){det=r.estadoFaja==="ok"?"Faja íntegra":"<b style='color:var(--crit)'>Faja rota/no coincide</b>";if(r.equiposFalla&&r.equiposFalla.length)det+=`<br><span style="color:var(--crit)">Falla: ${esc(r.equiposFalla.join("; "))}</span>`}
+    if(r.tipo==="diario"){det=r.estadoFaja==="ok"?"Faja íntegra":"<b style='color:var(--crit)'>Faja rota/no coincide</b>";if(r.via==="qr")det+=` <span class="muted">· por QR</span>`;if(r.equiposFalla&&r.equiposFalla.length)det+=`<br><span style="color:var(--crit)">Falla: ${esc(r.equiposFalla.join("; "))}</span>`}
     else{det=esc(r.motivo||"");if(r.faltantes&&r.faltantes.length)det+=`<br><span class="muted">Repuesto: ${esc(r.faltantes.join(", "))}</span>`}
     if(r.obs)det+=`<br><span class="muted">${esc(r.obs)}</span>`;
     const faja=r.tipo==="diario"?esc(r.faja||""):`${esc(r.fajaAnterior||"—")} → <b>${esc(r.fajaNueva||"")}</b>`;
@@ -136,6 +136,10 @@ function vComo(){
   <li>Verificar que la faja de cada unidad esté íntegra y que su número coincida con el que figura en esta página.</li>
   <li>En el carro, comprobar además monitor, aspirador y descartador.</li>
   <li>Registrar con <b>Control diario</b>. Si todo está bien, no se abre nada.</li></ol></div>
+  <div class="panel"><h2 class="sec">Control con código QR</h2><ol class="steps">
+  <li>Imprimir las etiquetas desde <b>Códigos QR</b> y pegar cada una en su unidad.</li>
+  <li>Escanear con la cámara del celular: si la unidad ya se controló hoy, aparece la confirmación en verde con hora y responsable.</li>
+  <li>Si está pendiente, escribir el número de faja que se ve, responder las preguntas y tocar <b>Confirmar control</b>. Si el número no coincide con el registrado, queda marcado para abrir y reponer.</li></ol></div>
   <div class="panel"><h2 class="sec">Apertura y reposición</h2><ol class="steps">
   <li>Se abre cuando la faja está rota, después de usar la unidad, cuando un ítem vence o en el control mensual.</li>
   <li>Con <b>Abrir y reponer</b>, contar cada ítem contra el listado, reponer lo que falte y cargar el vencimiento más próximo de cada ítem.</li>
@@ -143,9 +147,52 @@ function vComo(){
   <div class="panel"><h2 class="sec">Control mensual</h2><p style="margin:0">Cada unidad se abre al menos una vez cada 31 días para revisar vencimientos. La tarjeta avisa cuando se pasa ese plazo y la pestaña Vencimientos muestra lo que vence en los próximos 60 días.</p></div>`;
 }
 
+/* ===== Códigos QR ===== */
+function qrURL(u){return location.origin+location.pathname+"?u="+u}
+function qrSVG(text){const q=qrcode(0,"M");q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}
+function vQR(){
+  if(location.protocol==="file:")return `<div class="banner">Los códigos QR necesitan que la app esté publicada (por ejemplo en GitHub Pages). Abrila desde su dirección web para generarlos.</div>`;
+  return `<div class="toolbar noprint" style="justify-content:space-between"><h2 class="sec">Etiquetas para pegar en cada unidad</h2><button class="btn primary" data-act="print">Imprimir etiquetas</button></div>
+  <p class="muted noprint" style="margin:0">Al escanear la etiqueta con la cámara del celular se abre el control diario de esa unidad. Si ya fue controlada hoy, muestra la confirmación con hora y responsable.</p>
+  <div class="qrgrid">${ORDER.map(u=>`<div class="qrlabel">${qrSVG(qrURL(u))}<h3><span class="plus">✚</span> ${esc(INV[u].nombre)}</h3><p>Escaneá para registrar el control diario</p></div>`).join("")}</div>`;
+}
+let qrU=null;
+function sheetQR(u){
+  qrU=u; const e=ESTADO[u]||{},dh=diarioHoy(u),nombre=esc(INV[u].nombre);
+  let h=`<div class="sh"><h2>${nombre}</h2><button class="btn" data-act="close">Ir al tablero</button></div>`;
+  if(dh){
+    const ok=dh.estadoFaja==="ok"&&!(dh.equiposFalla||[]).length;
+    h+=`<div class="qrdone ${ok?"":"bad"}"><div class="big">${ok?"✓":"!"}</div><h3>${ok?"Controlada hoy":"Controlada hoy con problemas"}</h3>
+      <div>${fmtDT(dh.fecha).split(" ")[1]} hs · ${esc(dh.responsable||"")}</div>
+      <div>Faja <b class="mono">${esc(dh.faja||"—")}</b> ${dh.estadoFaja==="ok"?"íntegra":"<b>rota o no coincide</b>"}</div>
+      ${(dh.equiposFalla||[]).length?`<div><b>Falla:</b> ${esc(dh.equiposFalla.join("; "))}</div>`:""}</div>
+      <div class="actions">${ok?"":`<button class="btn danger" data-act="apertura" data-u="${u}">Abrir y reponer</button>`}<button class="btn" data-act="qr-otra">Registrar otro control</button></div>`;
+    return openSheet(h);
+  }
+  if(!e.faja){
+    h+=`<div class="qrdone bad"><div class="big">!</div><h3>Sin faja registrada</h3><div>Antes del primer control hay que abrir la unidad, reponer y cargar el número de faja.</div></div>
+      <div class="actions"><button class="btn primary" data-act="apertura" data-u="${u}">Abrir y reponer</button></div>`;
+    return openSheet(h);
+  }
+  qrForm(u,h);
+}
+function qrForm(u,h){
+  qrU=u; h=h||`<div class="sh"><h2>${esc(INV[u].nombre)}</h2><button class="btn" data-act="close">Ir al tablero</button></div>`;
+  diarioUnits=[u];
+  h+=`<div class="q" data-u="${u}"><div class="qt">Control diario · pendiente hoy</div>
+    <label class="f">Número de faja que ves en la unidad<input type="text" id="fajaVista" class="mono fajacheck" inputmode="numeric" autocomplete="off"></label>
+    <div class="muted" style="font-size:13.5px">¿La faja está íntegra (sin cortes ni despegada)?</div>
+    <div class="seg" data-q="faja"><button class="y" data-val="ok" aria-pressed="false">Sí, íntegra</button><button class="n" data-val="rota" aria-pressed="false">No</button></div>
+    ${(INV[u].equipos||[]).map((eq,i)=>`<div class="muted" style="font-size:13.5px;margin-top:4px">${esc(eq)}</div><div class="seg" data-q="eq${i}"><button class="y" data-val="ok" aria-pressed="false">Sí</button><button class="n" data-val="falla" aria-pressed="false">No</button></div>`).join("")}
+  </div>${respField()}
+  <div id="err" class="banner" hidden></div><div class="actions"><button class="btn primary" data-act="save-diario">Confirmar control</button></div>`;
+  openSheet(h);
+}
+
 /* ===== Hojas ===== */
 function openSheet(html){const s=$("#sheet");$("#sheetInner").innerHTML=html;s.hidden=false;s.scrollTop=0;document.body.style.overflow="hidden"}
-function closeSheet(){$("#sheet").hidden=true;document.body.style.overflow=""}
+function closeSheet(){$("#sheet").hidden=true;document.body.style.overflow="";
+  if(qrU){qrU=null;try{history.replaceState(null,"",location.pathname)}catch(e){}}}
 function respField(){return `<label class="f">Responsable <span class="hint">Nombre y apellido o iniciales + matrícula</span><input type="text" id="resp" value="${esc(lsGet("carro-resp")||"")}" autocomplete="name"></label>`}
 
 let diarioUnits=[];
@@ -165,20 +212,24 @@ function sheetDiario(units){
   openSheet(h);
 }
 async function saveDiario(){
-  const resp=$("#resp").value.trim(),obs=$("#obs").value.trim(),err=$("#err");
+  const resp=$("#resp").value.trim(),obs=($("#obs")?.value||"").trim(),err=$("#err");
   const out=[];
   for(const u of diarioUnits){
     const box=document.querySelector(`.q[data-u="${u}"]`);
     const get=q=>box.querySelector(`.seg[data-q="${q}"] [aria-pressed="true"]`)?.dataset.val;
-    const f=get("faja"); if(!f){err.hidden=false;err.textContent=`Falta indicar el estado de la faja de ${INV[u].nombre}.`;return}
+    let f=get("faja"); if(!f){err.hidden=false;err.textContent=`Falta indicar el estado de la faja de ${INV[u].nombre}.`;return}
+    const vista=box.querySelector("#fajaVista"),obsQR=[];
+    if(vista){const v=vista.value.trim();if(!v){err.hidden=false;err.textContent="Escribí el número de faja que ves en la unidad.";return}
+      if(v.replace(/\s/g,"").toUpperCase()!==String((ESTADO[u]||{}).faja||"").replace(/\s/g,"").toUpperCase()){f="rota";obsQR.push(`Faja leída ${v} no coincide con la registrada`)}}
     const fallas=[];(INV[u].equipos||[]).forEach((eq,i)=>{const v=get("eq"+i);if(!v){fallas.push(null)}else if(v==="falla")fallas.push(eq)});
     if(fallas.includes(null)){err.hidden=false;err.textContent=`Falta responder el chequeo de equipos de ${INV[u].nombre}.`;return}
-    out.push({unidad:u,tipo:"diario",estadoFaja:f,faja:(ESTADO[u]||{}).faja||"",equiposFalla:fallas,obs,responsable:resp});
+    out.push({unidad:u,tipo:"diario",estadoFaja:f,faja:(ESTADO[u]||{}).faja||"",equiposFalla:fallas,obs:[...obsQR,obs].filter(Boolean).join(". "),responsable:resp,...(vista?{via:"qr"}:{})});
   }
   if(!resp){err.hidden=false;err.textContent="Escribí quién realiza el control.";return}
   lsSet("carro-resp",resp);
   try{for(const r of out){await db.collection("registros").add({...r,fecha:new Date().toISOString(),userId:uid||null})}}
   catch(e){err.hidden=false;err.textContent="No se pudo guardar: "+(e.code==="invalid_argument"?"no tenés permiso para registrar.":e.message||e.code);return}
+  if(qrU){if(!diarioHoy(qrU))REG=[...out.map(r=>({...r,fecha:new Date().toISOString()})),...REG];sheetQR(qrU);return}
   closeSheet();
   const rotas=out.filter(r=>r.estadoFaja==="rota");
   toast(rotas.length?`Guardado. ${rotas.map(r=>INV[r.unidad].nombre).join(", ")}: abrir y reponer.`:"Control diario guardado.");
@@ -256,7 +307,9 @@ document.addEventListener("click",e=>{
   const a=t.dataset.act;
   if(a==="diario-todas")sheetDiario(ORDER);
   else if(a==="diario")sheetDiario([t.dataset.u]);
-  else if(a==="apertura")sheetApertura(t.dataset.u);
+  else if(a==="apertura"){qrU=null;sheetApertura(t.dataset.u)}
+  else if(a==="qr-otra")qrForm(qrU);
+  else if(a==="print")window.print();
   else if(a==="close")closeSheet();
   else if(a==="save-diario")saveDiario();
   else if(a==="save-apertura")saveApertura();
@@ -307,6 +360,8 @@ render();
     render();
   },()=>{});
   db.collection("estado").onSnapshot(s=>{ESTADO={};s.docs.forEach(d=>ESTADO[d.id]=d.data());render()},()=>{});
-  db.collection("registros").orderBy("fecha","desc").limit(500).onSnapshot(s=>{REG=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{});
+  let qrPend=new URLSearchParams(location.search).get("u");
+  db.collection("registros").orderBy("fecha","desc").limit(500).onSnapshot(s=>{REG=s.docs.map(d=>({id:d.id,...d.data()}));render();
+    if(qrPend&&INV[qrPend]){const u=qrPend;qrPend=null;setTimeout(()=>sheetQR(u),0)}},()=>{});
   render();
 })();

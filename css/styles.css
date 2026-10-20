@@ -121,4 +121,22 @@ label.f span.hint{font-weight:400;color:var(--muted)}
 .listado li .q2{font-variant-numeric:tabular-nums;font-weight:700}
 .prov{font-size:11px;color:var(--warn);font-weight:700;margin-left:4px}
 .steps{margin:0;padding-left:20px;display:grid;gap:6px}
+/* QR: etiquetas imprimibles y pantalla de escaneo */
+.qrgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.qrlabel{background:#fff;color:#000;border:2px dashed #999;border-radius:var(--r);padding:16px;display:grid;justify-items:center;gap:6px;text-align:center;break-inside:avoid}
+.qrlabel svg{width:180px;height:180px}
+.qrlabel h3{font-family:var(--f-display);font-size:24px;margin:0}
+.qrlabel h3 .plus{color:#b3261e}
+.qrlabel p{margin:0;font-size:13px}
+.qrdone{display:grid;justify-items:center;gap:8px;text-align:center;padding:28px 16px;border-radius:var(--r);background:var(--ok-soft);color:var(--fg)}
+.qrdone .big{font-size:56px;line-height:1;color:var(--ok)}
+.qrdone.bad{background:var(--crit-soft)} .qrdone.bad .big{color:var(--crit)}
+.qrdone h3{font-family:var(--f-display);font-size:28px;margin:0}
+.fajacheck{font-size:22px;letter-spacing:.06em;text-align:center;width:100%}
+@media print{
+  header.top,.banner,.noprint,.toast{display:none!important}
+  body{background:#fff;padding:0}
+  main{padding:0}
+  .qrgrid{grid-template-columns:repeat(2,1fr)}
+}
 @media (prefers-reduced-motion:no-preference){.unit{transition:border-color .2s}}
