@@ -18,7 +18,6 @@ css/styles.css      Estilos (tema claro y oscuro automático)
 js/app.js           Lógica de la app: inventario, estados, vistas y formularios
 js/storage.js       Almacenamiento local para usar fuera de claude.ai
 js/vendor/qrcode.js Generador de QR (qrcode-generator, licencia MIT)
-.github/workflows/  Publicación automática en GitHub Pages
 ```
 
 No requiere compilación ni dependencias: es HTML, CSS y JavaScript puro.
@@ -34,8 +33,9 @@ En modo local, la pestaña **Historial** tiene **Exportar respaldo** e **Importa
 
 ## Publicar en GitHub Pages
 
-1. En el repositorio: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. Cada push a `main` publica la app en `https://<usuario>.github.io/<repositorio>/`.
+1. En el repositorio: **Settings → Pages → Build and deployment**.
+2. **Source: Deploy from a branch** · **Branch: `main`** · carpeta **`/ (root)`** → **Save**.
+3. En 1–2 minutos queda en `https://nmansilla93-web.github.io/Carro-de-paro-CIMA/`. Cada cambio en `main` se publica solo.
 
 ## Usar localmente
 
