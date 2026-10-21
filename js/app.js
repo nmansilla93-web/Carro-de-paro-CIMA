@@ -28,7 +28,7 @@ let db=null,user=null,uid=null,canWrite=true,canEditInv=false,dl=null,dbReady=fa
 let view="hoy",histFilter="todas";
 let modo=lsGet("carro-modo")||"control"; // control | coord
 const $=s=>document.querySelector(s);
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&","<":"<",">":">","\"":"""}[c]));
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 
