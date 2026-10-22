@@ -1,6 +1,7 @@
 /* ===== Firebase adapter ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getFirestore, collection, doc, addDoc, setDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMD738RH9XQL3nk72gb6DzWkoCK6a7rqA",
@@ -14,6 +15,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
+const auth = getAuth(app);
+
+// Sign in anonymously so rules that require auth allow access
+signInAnonymously(auth).catch(err => console.warn("Anonymous sign-in failed", err));
 
 function docSnap(id, data) {
   return { id, exists: data !== undefined, data: () => structuredClone(data) };
